@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Camera Capture</title>
+  <style>
+    video, canvas, img {
+      display: block;
+      margin: 10px 0;
+      max-width: 100%;
+    }
+    .gallery img {
+      max-width: 150px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Live Camera</h1>
+  <video id="video" autoplay playsinline width="400"></video>
+  <button id="capture">Take Photo</button>
+  <div class="gallery" id="gallery"></div>
+  <button id="submit">Submit</button>
+
+  <script>
+    const video = document.getElementById('video');
+    const captureBtn = document.getElementById('capture');
+    const gallery = document.getElementById('gallery');
+    const submitBtn = document.getElementById('submit');
+
+    // Start webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(err => alert('Error accessing camera: ' + err));
+
+    // Load saved images from localStorage
+    function loadImages() {
+      gallery.innerHTML = '';
+      const images = JSON.parse(localStorage.getItem('capturedImages') || '[]');
+      images.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        gallery.appendChild(img);
+      });
+    }
+
+    loadImages();
+
+    // Capture photo
+    captureBtn.onclick = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+
+      // Save to localStorage
+      const images = JSON.parse(localStorage.getItem('capturedImages') || '[]');
+      images.push(imageData);
+      localStorage.setItem('capturedImages', JSON.stringify(images));
+
+      loadImages();
+    };
+
+    // Submit: clear localStorage and reload
+    submitBtn.onclick = () => {
+      localStorage.removeItem('capturedImages');
+      location.reload(); // or redirect somewhere else
+    };
+  </script>
+</body>
+</html>
